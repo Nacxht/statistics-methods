@@ -45,10 +45,19 @@ class DataStatistic:
     sns.pairplot(data)
     plt.suptitle(f"Pair Plot Kolom: {columns_name}")
     plt.show()
+
+  def get_stdev(self, columns_name: str):
+    data = np.array(self.df[columns_name])
+    stdev = data.std()
+    
+    return stdev
     
 
 data = DataStatistic("datasets/student_habits_performance.csv")
-data.normality_histogram("study_hours_per_day")
-data.normality_histogram("netflix_hours")
-data.scatter_plot("exam_score", "study_hours_per_day")
-data.scatter_matrix(["exam_score", "study_hours_per_day", "sleep_hours"])
+data.normality_histogram("sleep_hours")
+data.normality_histogram("social_media_hours")
+data.scatter_plot("social_media_hours", "sleep_hours")
+data.scatter_matrix(["sleep_hours", "social_media_hours"])
+
+print(f"Standar deviasi sleep_hours: {data.get_stdev("sleep_hours")}")
+print(f"Standar deviasi social_media_hours: {data.get_stdev("social_media_hours")}")
