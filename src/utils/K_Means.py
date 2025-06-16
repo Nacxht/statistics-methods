@@ -1,6 +1,6 @@
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 from .DataStatistic import DataStatistic
 from pandas import DataFrame
@@ -81,17 +81,52 @@ class K_Means(DataStatistic):
       plt.xticks(k_range)
       plt.show()
     
-  def clustering(self, k: int, feature_1: str, feature_2: str) -> 'KMeans | None':
+  def clustering(self, k: int, feature_1: str, feature_2: str, max_iters:int = 10) -> 'KMeans | None':
     X_scaled = self.scale_data()
     clustered_df = self.df.copy()
 
-    if "X_scaled" in locals():
-      k_means = KMeans(n_clusters=k, random_state=42, n_init='auto')
+    if "X_scaled" in locals():     
+      k_means = KMeans(n_clusters=k, random_state=42, n_init='auto', verbose=True)
       clustered_df["cluster"] = k_means.fit_predict(X_scaled)
 
       # menghitung rata-rata dari setiap fitur untuk setiap cluster
       cluster_means = clustered_df.groupby("cluster").mean()
-      print(f"Rata-rata fitur per-cluster (dalam skala asli data):\n{cluster_means}")
+      print(f"\nRata-rata fitur per-cluster (dalam skala asli data):\n{cluster_means}")
+
+      # k_means_init = KMeans(n_clusters=k, random_state=42, n_init=1)
+      # k_means_init.fit(X_scaled)
+      # initial_centroid = k_means_init.cluster_centers_
+      
+      tolerance_value = 1e-4 
+      centroid_history = []
+
+      temp_k_means = KMeans(n_clusters=k, init='k-means++', n_init=1, random_state=42)
+      temp_k_means.fit(X_scaled )
+      centroids = temp_k_means.cluster_centers_
+
+      for i in range(max_iters):
+        centroid_history.append(centroids.copy())
+
+        distances = np.sqrt(((X_scaled - centroids[:, np.newaxis])**2).sum(axis=2))
+        labels = np.argmin(distances, axis=0)
+
+        new_centroids =  np.array(
+          [
+            X_scaled[labels == j].mean(axis=0) if
+            np.sum(labels == j) > 0 else
+            centroids[j] for j in range(k)
+          ]
+        )
+        
+        if np.all(np.abs(new_centroids - centroids) < tolerance_value): # Gunakan tol dari KMeans asli
+          print(f"Konvergensi tercapai pada iterasi {i+1}.")
+          centroids = new_centroids
+          centroid_history.append(centroids.copy()) # Simpan posisi final setelah konvergensi
+          break
+
+        centroids = new_centroids
+
+      print(f"\nLetak centroid di tiap iterasi:\n{centroid_history}")
 
       # menghitung ukuran cluster (jumlah anggota)
       cluster_size = clustered_df["cluster"].value_counts().sort_index()
