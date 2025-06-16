@@ -119,14 +119,14 @@ class K_Means(DataStatistic):
         )
         
         if np.all(np.abs(new_centroids - centroids) < tolerance_value): # Gunakan tol dari KMeans asli
-          print(f"Konvergensi tercapai pada iterasi {i+1}.")
+          print(f"\nKonvergensi tercapai pada iterasi {i+1}.")
           centroids = new_centroids
           centroid_history.append(centroids.copy()) # Simpan posisi final setelah konvergensi
           break
 
         centroids = new_centroids
 
-      print(f"\nLetak centroid di tiap iterasi:\n{centroid_history}")
+      print(f"Letak centroid di tiap iterasi:\n{centroid_history}")
 
       # menghitung ukuran cluster (jumlah anggota)
       cluster_size = clustered_df["cluster"].value_counts().sort_index()
