@@ -1,4 +1,5 @@
 from scipy.stats import norm
+from pandas import DataFrame
 
 import numpy as np
 import seaborn as sns
@@ -7,11 +8,19 @@ import matplotlib.pyplot as plt
 import os
 
 class DataStatistic:
-  def __init__(self, csv_path):
+  def __init__(self, csv_path: str):
     current_dir = os.path.dirname(os.path.abspath(__file__))
+    self.csv_path = csv_path
     self.df = pd.read_csv(f"{current_dir}/{csv_path}")
 
-  def normality_histogram(self, column_name: str):
+  # menampilkan 5 baris pertama
+  def get_df_head(self) -> 'DataFrame':
+    return self.df.head()
+
+  def get_df_info(self) -> None:
+    self.df.info()
+
+  def normality_histogram(self, column_name: str) -> None:
     data = np.array(self.df[column_name])
     sns.histplot(data, kde=True, stat="density", color="skyblue", label="data")
     
@@ -26,7 +35,7 @@ class DataStatistic:
     plt.grid(True)
     plt.show()
 
-  def scatter_plot(self, x_column: str, y_column: str):
+  def scatter_plot(self, x_column: str, y_column: str) -> None:
     data_x = np.array(self.df[x_column])
     data_y = np.array(self.df[y_column])
 
@@ -39,8 +48,8 @@ class DataStatistic:
     plt.grid(True)
     plt.show()
 
-  def scatter_matrix(self, columns_name: list[str]):
-    data = pd.DataFrame({column: self.df[column] for column in columns_name})
+  def scatter_matrix(self, columns_name: list[str]) -> None:
+    data = self.df[columns_name]
 
     sns.pairplot(data)
     plt.suptitle(f"Pair Plot Kolom: {columns_name}")
@@ -51,13 +60,3 @@ class DataStatistic:
     stdev = data.std()
     
     return stdev
-    
-
-data = DataStatistic("datasets/student_habits_performance.csv")
-data.normality_histogram("sleep_hours")
-data.normality_histogram("social_media_hours")
-data.scatter_plot("social_media_hours", "sleep_hours")
-data.scatter_matrix(["sleep_hours", "social_media_hours"])
-
-print(f"Standar deviasi sleep_hours: {data.get_stdev("sleep_hours")}")
-print(f"Standar deviasi social_media_hours: {data.get_stdev("social_media_hours")}")
