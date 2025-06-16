@@ -1,16 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from .DataStatistic import DataStatistic
 from pandas import DataFrame
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
 class K_Means(DataStatistic):
   def __init__(self, csv_path: str, features: list[str] | None) -> None:
     super().__init__(csv_path)
     
+    self.features: list[str] | None = features
     self.df: 'DataFrame' = self.df[features] if features else self.df
 
   def delete_missing_values(self) -> None:
@@ -78,3 +80,61 @@ class K_Means(DataStatistic):
       plt.grid(True)
       plt.xticks(k_range)
       plt.show()
+    
+  def clustering(self, k: int, feature_1: str, feature_2: str) -> 'KMeans | None':
+    X_scaled = self.scale_data()
+    clustered_df = self.df.copy()
+
+    if "X_scaled" in locals():
+      k_means = KMeans(n_clusters=k, random_state=42, n_init='auto')
+      clustered_df["cluster"] = k_means.fit_predict(X_scaled)
+
+      # menghitung rata-rata dari setiap fitur untuk setiap cluster
+      cluster_means = clustered_df.groupby("cluster").mean()
+      print(f"Rata-rata fitur per-cluster (dalam skala asli data):\n{cluster_means}")
+
+      # menghitung ukuran cluster (jumlah anggota)
+      cluster_size = clustered_df["cluster"].value_counts().sort_index()
+      print(f"\nUkuran cluster (jumlah anggota):\n{cluster_size}")
+
+      # visualisasi profil cluster
+      # membantu membandingkan fitur-fitur diantara cluster
+      for column in clustered_df.columns:
+        plt.figure(figsize=(8, 5))
+        sns.barplot(x=clustered_df.index, y=clustered_df[column])
+        plt.title(f"Rata-rata {column} per-cluster")
+        plt.xlabel("Cluster")
+        plt.ylabel(f"Rata-rata {column}")
+        plt.grid(axis='y')
+        plt.show()
+    
+      # visualisasi clustering
+      plt.figure(figsize=(10, 8))
+      sns.scatterplot(
+        x=feature_1, y=feature_2, hue='cluster',
+        data=clustered_df, palette='viridis', s=100, alpha=0.8,
+        legend='full'
+      )
+
+      centroids_scaled = k_means.cluster_centers_
+
+      plt.title(f"Hasil K-Means Clustering (K={k})")
+      plt.xlabel(feature_1)
+      plt.ylabel(feature_2)
+      plt.legend()
+      plt.grid(True)
+      plt.show()
+
+      # mengevaluasi kualitas cluster
+      if k <= 1:
+        return
+      
+      # metode calinski harabasz index
+      # semakin tinggi skor, semakin baik kualitasnya
+      ch_score = calinski_harabasz_score(X_scaled, clustered_df["cluster"])
+      print(f"Calinski-Harabasz Index: {ch_score:.2f}")
+
+      # metode davies bouldin index
+      # semakin rendah skor, semakin baik kualitasnya
+      db_score = davies_bouldin_score(X_scaled, clustered_df["cluster"])
+      print(f"Davies-Bouldin Index: {db_score:.2f}")
