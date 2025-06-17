@@ -86,7 +86,7 @@ class K_Means(DataStatistic):
     clustered_df = self.df.copy()
 
     if "X_scaled" in locals():     
-      k_means = KMeans(n_clusters=k, random_state=42, n_init='auto', verbose=True)
+      k_means = KMeans(n_clusters=k, random_state=42, n_init=max_iters, verbose=True)
       clustered_df["cluster"] = k_means.fit_predict(X_scaled)
 
       # menghitung rata-rata dari setiap fitur untuk setiap cluster
@@ -97,40 +97,44 @@ class K_Means(DataStatistic):
       # k_means_init.fit(X_scaled)
       # initial_centroid = k_means_init.cluster_centers_
       
-      tolerance_value = 1e-4 
-      centroid_history = []
+      # tolerance_value = 1e-4 
+      # centroid_history = []
 
-      temp_k_means = KMeans(n_clusters=k, init='k-means++', n_init=1, random_state=42)
-      temp_k_means.fit(X_scaled )
-      centroids = temp_k_means.cluster_centers_
+      # temp_k_means = KMeans(n_clusters=k, init='k-means++', n_init=1, random_state=42)
+      # temp_k_means.fit(X_scaled)
+      # centroids = temp_k_means.cluster_centers_
 
-      for i in range(max_iters):
-        centroid_history.append(centroids.copy())
+      # for i in range(max_iters):
+      #   centroid_history.append(centroids.copy())
 
-        distances = np.sqrt(((X_scaled - centroids[:, np.newaxis])**2).sum(axis=2))
-        labels = np.argmin(distances, axis=0)
+      #   distances = np.sqrt(((X_scaled - centroids[:, np.newaxis])**2).sum(axis=2))
+      #   labels = np.argmin(distances, axis=0)
 
-        new_centroids =  np.array(
-          [
-            X_scaled[labels == j].mean(axis=0) if
-            np.sum(labels == j) > 0 else
-            centroids[j] for j in range(k)
-          ]
-        )
+      #   new_centroids =  np.array(
+      #     [
+      #       X_scaled[labels == j].mean(axis=0) if
+      #       np.sum(labels == j) > 0 else
+      #       centroids[j] for j in range(k)
+      #     ]
+      #   )
         
-        if np.all(np.abs(new_centroids - centroids) < tolerance_value): # Gunakan tol dari KMeans asli
-          print(f"\nKonvergensi tercapai pada iterasi {i+1}.")
-          centroids = new_centroids
-          centroid_history.append(centroids.copy()) # Simpan posisi final setelah konvergensi
-          break
+        # if np.all(np.abs(new_centroids - centroids) < tolerance_value): # Gunakan tol dari KMeans asli
+        #   print(f"\nKonvergensi tercapai pada iterasi {i+1}.")
+        #   centroids = new_centroids
+        #   break
 
-        centroids = new_centroids
+      #   centroids = new_centroids
+      #   centroid_history.append(centroids.copy()) # Simpan posisi final setelah konvergensi
 
-      print(f"Letak centroid di tiap iterasi:\n{centroid_history}")
+      # print(f"Jumlah iterasi: {len(centroid_history)}")
+      # print(f"Letak centroid di tiap iterasi:\n{centroid_history}")
 
       # menghitung ukuran cluster (jumlah anggota)
       cluster_size = clustered_df["cluster"].value_counts().sort_index()
       print(f"\nUkuran cluster (jumlah anggota):\n{cluster_size}")
+
+      # letak-letak cluster
+      print(f"\nLetak akhir cluster:\n{k_means.cluster_centers_}")
 
       # visualisasi profil cluster
       # membantu membandingkan fitur-fitur diantara cluster
@@ -167,7 +171,7 @@ class K_Means(DataStatistic):
       # metode calinski harabasz index
       # semakin tinggi skor, semakin baik kualitasnya
       ch_score = calinski_harabasz_score(X_scaled, clustered_df["cluster"])
-      print(f"Calinski-Harabasz Index: {ch_score:.2f}")
+      print(f"\nCalinski-Harabasz Index: {ch_score:.2f}")
 
       # metode davies bouldin index
       # semakin rendah skor, semakin baik kualitasnya
